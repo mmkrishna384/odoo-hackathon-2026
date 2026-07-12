@@ -22,8 +22,10 @@ services:
     name: transitops-frontend
     plan: free
     rootDir: client
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     publishPath: build
     envVars:
       - key: REACT_APP_API_URL
         value: https://transitops-backend-n4am.onrender.com/api
+      - key: DISABLE_ESLINT_PLUGIN
+        value: true
