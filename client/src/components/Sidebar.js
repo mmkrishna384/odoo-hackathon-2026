@@ -3,14 +3,14 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const navItems = [
-  { path: '/dashboard', icon: '📊', label: 'Dashboard', section: 'OVERVIEW' },
-  { path: '/vehicles', icon: '🚛', label: 'Vehicles', section: 'FLEET' },
-  { path: '/drivers', icon: '👤', label: 'Drivers', section: 'FLEET' },
-  { path: '/trips', icon: '🗺️', label: 'Trips', section: 'OPERATIONS' },
-  { path: '/maintenance', icon: '🔧', label: 'Maintenance', section: 'OPERATIONS' },
-  { path: '/fuel', icon: '⛽', label: 'Fuel Logs', section: 'FINANCE' },
-  { path: '/expenses', icon: '💰', label: 'Expenses', section: 'FINANCE' },
-  { path: '/reports', icon: '📈', label: 'Reports', section: 'ANALYTICS' },
+  { path: '/dashboard', icon: '📊', label: 'Dashboard', section: 'OVERVIEW', roles: ['fleet_manager', 'safety_officer', 'financial_analyst'] },
+  { path: '/vehicles', icon: '🚛', label: 'Vehicles', section: 'FLEET', roles: ['fleet_manager', 'driver'] },
+  { path: '/drivers', icon: '👤', label: 'Drivers', section: 'FLEET', roles: ['safety_officer'] },
+  { path: '/trips', icon: '🗺️', label: 'Trips', section: 'OPERATIONS', roles: ['fleet_manager', 'driver'] },
+  { path: '/maintenance', icon: '🔧', label: 'Maintenance', section: 'OPERATIONS', roles: ['fleet_manager'] },
+  { path: '/fuel', icon: '⛽', label: 'Fuel Logs', section: 'FINANCE', roles: ['financial_analyst'] },
+  { path: '/expenses', icon: '💰', label: 'Expenses', section: 'FINANCE', roles: ['financial_analyst'] },
+  { path: '/reports', icon: '📈', label: 'Reports', section: 'ANALYTICS', roles: ['fleet_manager', 'financial_analyst'] },
   { path: '/profile', icon: '⚙️', label: 'Profile', section: 'ACCOUNT' },
 ];
 
@@ -39,8 +39,12 @@ const getRoleBadgeColor = (role) => {
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
 
+  const filteredNavItems = navItems.filter((item) =>
+    !item.roles || (user && item.roles.includes(user.role))
+  );
+
   const renderedSections = sections.filter((s) =>
-    navItems.some((n) => n.section === s)
+    filteredNavItems.some((n) => n.section === s)
   );
 
   return (
@@ -66,7 +70,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         <nav className="sidebar-nav">
           {renderedSections.map((section) => {
-            const sectionItems = navItems.filter((n) => n.section === section);
+            const sectionItems = filteredNavItems.filter((n) => n.section === section);
             return (
               <div key={section}>
                 <div className="sidebar-section">{section}</div>

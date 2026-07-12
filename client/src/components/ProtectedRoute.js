@@ -19,15 +19,8 @@ const ProtectedRoute = ({ children, roles }) => {
   }
 
   if (roles && !roles.includes(user.role)) {
-    return (
-      <div className="flex-center" style={{ height: '100vh', flexDirection: 'column', gap: 16 }}>
-        <div style={{ fontSize: 48 }}>🚫</div>
-        <h2 style={{ color: 'var(--danger)' }}>Access Denied</h2>
-        <p style={{ color: 'var(--text-muted)' }}>
-          You don't have permission to view this page.
-        </p>
-      </div>
-    );
+    const defaultPath = user.role === 'driver' ? '/trips' : '/dashboard';
+    return <Navigate to={defaultPath} replace />;
   }
 
   return children;

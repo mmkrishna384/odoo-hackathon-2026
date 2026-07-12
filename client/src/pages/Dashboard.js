@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -26,22 +26,32 @@ const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Filters
+  const [vehicleType, setVehicleType] = useState('');
+  const [status, setStatus] = useState('');
+  const [region, setRegion] = useState('');
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
-
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
-      const { data: d } = await dashboardAPI.get();
+      const params = {};
+      if (vehicleType) params.vehicleType = vehicleType;
+      if (status) params.status = status;
+      if (region) params.region = region;
+
+      const { data: d } = await dashboardAPI.get(params);
       setData(d);
     } catch (err) {
       setError('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [vehicleType, status, region]);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
 
   if (loading) {
     return (
@@ -90,6 +100,51 @@ const Dashboard = () => {
 
   return (
     <div>
+      {/* Filters Bar */}
+      <div className="card mb-24" style={{ padding: '16px 20px' }}>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 150 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+              Vehicle Type
+            </span>
+            <select className="filter-select" style={{ width: '100%', padding: '8px 12px', height: 38 }} value={vehicleType} onChange={(e) => setVehicleType(e.target.value)}>
+              <option value="">All Types</option>
+              {['Truck', 'Van', 'Pickup', 'Tanker', 'Trailer', 'Bus', 'Car', 'Motorcycle'].map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: 1, minWidth: 150 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+              Status
+            </span>
+            <select className="filter-select" style={{ width: '100%', padding: '8px 12px', height: 38 }} value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="">All Statuses</option>
+              {['Available', 'On Trip', 'In Shop', 'Retired'].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: 1, minWidth: 150 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+              Region
+            </span>
+            <input
+              className="form-control"
+              style={{ height: 38, padding: '8px 12px', fontSize: 13, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-primary)', width: '100%' }}
+              placeholder="e.g. North Zone"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+            />
+          </div>
+          <div>
+            <button className="btn btn-secondary" style={{ height: 38 }} onClick={() => { setVehicleType(''); setStatus(''); setRegion(''); }}>
+              🔄 Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* KPI Section - Vehicles */}
       <div className="mb-24">
         <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 12 }}>

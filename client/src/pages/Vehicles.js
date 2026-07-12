@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { vehicleAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const VEHICLE_TYPES = ['Truck', 'Van', 'Pickup', 'Tanker', 'Trailer', 'Bus', 'Car', 'Motorcycle'];
 const STATUSES = ['Available', 'On Trip', 'In Shop', 'Retired'];
@@ -150,6 +151,8 @@ const ConfirmDialog = ({ message, onConfirm, onCancel }) => (
 );
 
 const Vehicles = () => {
+  const { user } = useAuth();
+  const canManage = user?.role === 'fleet_manager';
   const [vehicles, setVehicles] = useState([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
@@ -206,9 +209,11 @@ const Vehicles = () => {
           <h2>🚛 Vehicles</h2>
           <p>{total} vehicles in fleet</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditVehicle(null); setShowModal(true); }}>
-          ➕ Add Vehicle
-        </button>
+        {canManage && (
+          <button className="btn btn-primary" onClick={() => { setEditVehicle(null); setShowModal(true); }}>
+            ➕ Add Vehicle
+          </button>
+        )}
       </div>
 
       {error && <div className="alert alert-error"><span>⚠️</span> {error} <button onClick={() => setError('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>✕</button></div>}
@@ -240,8 +245,14 @@ const Vehicles = () => {
         <div className="empty-state">
           <div className="empty-icon">🚛</div>
           <p className="empty-title">No vehicles found</p>
-          <p className="empty-desc">Add your first vehicle to get started</p>
-          <button className="btn btn-primary mt-16" onClick={() => { setEditVehicle(null); setShowModal(true); }}>➕ Add Vehicle</button>
+          <p className="empty-desc">
+            {canManage ? 'Add your first vehicle to get started' : 'There are no vehicles in the fleet.'}
+          </p>
+          {canManage && (
+            <button className="btn btn-primary mt-16" onClick={() => { setEditVehicle(null); setShowModal(true); }}>
+              ➕ Add Vehicle
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -256,7 +267,7 @@ const Vehicles = () => {
                   <th>Odometer</th>
                   <th>Acq. Cost</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  {canManage && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -276,12 +287,14 @@ const Vehicles = () => {
                     <td style={{ fontSize: 13 }}>{v.odometer?.toLocaleString()} km</td>
                     <td style={{ fontSize: 13 }}>{formatCurrency(v.acquisitionCost)}</td>
                     <td><span className={`badge ${statusClass[v.status] || 'badge-secondary'}`}>{v.status}</span></td>
-                    <td>
-                      <div className="action-btns">
-                        <button className="btn btn-secondary btn-sm" onClick={() => { setEditVehicle(v); setShowModal(true); }} title="Edit">✏️</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(v._id)} title="Delete">🗑️</button>
-                      </div>
-                    </td>
+                    {canManage && (
+                      <td>
+                        <div className="action-btns">
+                          <button className="btn btn-secondary btn-sm" onClick={() => { setEditVehicle(v); setShowModal(true); }} title="Edit">✏️</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(v._id)} title="Delete">🗑️</button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

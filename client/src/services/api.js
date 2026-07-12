@@ -42,7 +42,7 @@ export const authAPI = {
 
 // Dashboard
 export const dashboardAPI = {
-  get: () => api.get('/dashboard'),
+  get: (params) => api.get('/dashboard', { params }),
 };
 
 // Vehicles

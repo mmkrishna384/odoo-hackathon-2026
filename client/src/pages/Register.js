@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ROLE_OPTIONS = [
-  { value: 'fleet_manager', label: 'Fleet Manager', icon: '🛡️', desc: 'Full access to manage fleet, drivers, and trips' },
-  { value: 'driver', label: 'Driver', icon: '🚛', desc: 'View trips and vehicle assignments' },
-  { value: 'safety_officer', label: 'Safety Officer', icon: '🦺', desc: 'Monitor safety, maintenance, and compliance' },
-  { value: 'financial_analyst', label: 'Financial Analyst', icon: '📊', desc: 'View expenses, fuel logs, and financial reports' },
+  { value: 'fleet_manager', label: 'Fleet Manager', icon: '🛡️', desc: 'Oversees fleet assets, maintenance, vehicle lifecycle, trips, and operational efficiency' },
+  { value: 'driver', label: 'Driver', icon: '🚛', desc: 'Monitors active deliveries and views assigned trips and vehicles' },
+  { value: 'safety_officer', label: 'Safety Officer', icon: '🦺', desc: 'Ensures driver compliance, tracks license validity, and monitors safety scores' },
+  { value: 'financial_analyst', label: 'Financial Analyst', icon: '📊', desc: 'Reviews operational expenses, fuel consumption, maintenance costs, and profitability' },
 ];
 
 const ROLE_COLORS = {
@@ -45,8 +45,8 @@ const Register = () => {
     }
     setLoading(true);
     try {
-      await register(form);
-      navigate('/dashboard');
+      const data = await register(form);
+      navigate(data.role === 'driver' ? '/trips' : '/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {

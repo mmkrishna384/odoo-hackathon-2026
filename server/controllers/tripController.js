@@ -185,7 +185,7 @@ const completeTrip = async (req, res) => {
       return res.status(400).json({ message: 'Only dispatched trips can be completed' });
     }
 
-    const { actualDistance, revenue } = req.body;
+    const { actualDistance, revenue, liters, fuelCost } = req.body;
 
     // Update vehicle and driver back to Available
     await Vehicle.findByIdAndUpdate(trip.vehicle, { status: 'Available' });
@@ -210,6 +210,22 @@ const completeTrip = async (req, res) => {
           odometer: vehicle.odometer + Number(actualDistance),
         });
       }
+    }
+
+    // Auto-create fuel log if fuel data is provided
+    if (liters && fuelCost) {
+      const FuelLog = require('../models/FuelLog');
+      const vehicle = await Vehicle.findById(trip.vehicle);
+      await FuelLog.create({
+        vehicle: trip.vehicle,
+        trip: trip._id,
+        liters: Number(liters),
+        costPerLiter: Number(liters) > 0 ? (Number(fuelCost) / Number(liters)) : 0,
+        totalCost: Number(fuelCost),
+        date: new Date(),
+        createdBy: req.user._id,
+        fuelType: vehicle?.fuelType || 'Diesel',
+      });
     }
 
     res.json(updated);

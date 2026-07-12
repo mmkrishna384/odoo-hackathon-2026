@@ -10,12 +10,19 @@ const Expense = require('../models/Expense');
 // @access  Private
 const getDashboard = async (req, res) => {
   try {
+    const { vehicleType, status, region } = req.query;
+
+    const vehicleFilter = {};
+    if (vehicleType) vehicleFilter.vehicleType = vehicleType;
+    if (status) vehicleFilter.status = status;
+    if (region) vehicleFilter.region = region;
+
     // Vehicle stats
-    const totalVehicles = await Vehicle.countDocuments();
-    const availableVehicles = await Vehicle.countDocuments({ status: 'Available' });
-    const onTripVehicles = await Vehicle.countDocuments({ status: 'On Trip' });
-    const inShopVehicles = await Vehicle.countDocuments({ status: 'In Shop' });
-    const retiredVehicles = await Vehicle.countDocuments({ status: 'Retired' });
+    const totalVehicles = await Vehicle.countDocuments(vehicleFilter);
+    const availableVehicles = await Vehicle.countDocuments({ ...vehicleFilter, status: 'Available' });
+    const onTripVehicles = await Vehicle.countDocuments({ ...vehicleFilter, status: 'On Trip' });
+    const inShopVehicles = await Vehicle.countDocuments({ ...vehicleFilter, status: 'In Shop' });
+    const retiredVehicles = await Vehicle.countDocuments({ ...vehicleFilter, status: 'Retired' });
 
     // Driver stats
     const totalDrivers = await Driver.countDocuments();
@@ -24,11 +31,18 @@ const getDashboard = async (req, res) => {
     const suspendedDrivers = await Driver.countDocuments({ status: 'Suspended' });
 
     // Trip stats
-    const totalTrips = await Trip.countDocuments();
-    const activeTrips = await Trip.countDocuments({ status: 'Dispatched' });
-    const pendingTrips = await Trip.countDocuments({ status: 'Draft' });
-    const completedTrips = await Trip.countDocuments({ status: 'Completed' });
-    const cancelledTrips = await Trip.countDocuments({ status: 'Cancelled' });
+    const tripFilter = {};
+    if (vehicleType || status || region) {
+      const matchingVehicles = await Vehicle.find(vehicleFilter).select('_id');
+      const matchingVehicleIds = matchingVehicles.map(v => v._id);
+      tripFilter.vehicle = { $in: matchingVehicleIds };
+    }
+
+    const totalTrips = await Trip.countDocuments(tripFilter);
+    const activeTrips = await Trip.countDocuments({ ...tripFilter, status: 'Dispatched' });
+    const pendingTrips = await Trip.countDocuments({ ...tripFilter, status: 'Draft' });
+    const completedTrips = await Trip.countDocuments({ ...tripFilter, status: 'Completed' });
+    const cancelledTrips = await Trip.countDocuments({ ...tripFilter, status: 'Cancelled' });
 
     // Fleet utilization
     const fleetUtilization = totalVehicles > 0

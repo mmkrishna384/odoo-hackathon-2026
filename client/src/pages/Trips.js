@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { tripAPI, vehicleAPI, driverAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const TRIP_STATUSES = ['Draft', 'Dispatched', 'Completed', 'Cancelled'];
 
@@ -185,25 +186,48 @@ const TripModal = ({ trip, onClose, onSave }) => {
 const CompleteModal = ({ onConfirm, onCancel }) => {
   const [actualDistance, setActualDistance] = useState('');
   const [revenue, setRevenue] = useState('');
+  const [liters, setLiters] = useState('');
+  const [fuelCost, setFuelCost] = useState('');
 
   return (
     <div className="modal-overlay">
       <div className="confirm-dialog" style={{ maxWidth: 380, textAlign: 'left' }}>
         <div style={{ fontSize: 32, textAlign: 'center' }}>🏁</div>
         <h3 className="confirm-title" style={{ textAlign: 'center' }}>Complete Trip</h3>
+        
         <div className="form-group mt-16">
           <label className="form-label">Actual Distance (km)</label>
           <input type="number" className="form-control" placeholder="e.g. 155"
             value={actualDistance} onChange={(e) => setActualDistance(e.target.value)} />
         </div>
+        
         <div className="form-group">
           <label className="form-label">Revenue Earned (₹)</label>
           <input type="number" className="form-control" placeholder="e.g. 15000"
             value={revenue} onChange={(e) => setRevenue(e.target.value)} />
         </div>
+
+        <div style={{ borderTop: '1px solid var(--border)', margin: '16px 0', paddingTop: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
+            Fuel Purchased (Optional)
+          </span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontSize: 11 }}>Fuel Liters</label>
+              <input type="number" className="form-control" placeholder="e.g. 15"
+                value={liters} onChange={(e) => setLiters(e.target.value)} />
+            </div>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontSize: 11 }}>Total Fuel Cost (₹)</label>
+              <input type="number" className="form-control" placeholder="e.g. 1500"
+                value={fuelCost} onChange={(e) => setFuelCost(e.target.value)} />
+            </div>
+          </div>
+        </div>
+
         <div className="confirm-btns" style={{ marginTop: 16 }}>
           <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
-          <button className="btn btn-success" onClick={() => onConfirm({ actualDistance, revenue })}>✅ Complete</button>
+          <button className="btn btn-success" onClick={() => onConfirm({ actualDistance, revenue, liters, fuelCost })}>✅ Complete</button>
         </div>
       </div>
     </div>
@@ -233,6 +257,8 @@ const CancelModal = ({ onConfirm, onCancel }) => {
 };
 
 const Trips = () => {
+  const { user } = useAuth();
+  const canManage = user?.role === 'fleet_manager';
   const [trips, setTrips] = useState([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(1);
@@ -327,9 +353,11 @@ const Trips = () => {
           <h2>🗺️ Trips</h2>
           <p>{total} trips in system</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setEditTrip(null); setShowModal(true); }}>
-          ➕ Create Trip
-        </button>
+        {canManage && (
+          <button className="btn btn-primary" onClick={() => { setEditTrip(null); setShowModal(true); }}>
+            ➕ Create Trip
+          </button>
+        )}
       </div>
 
       {error && (
@@ -358,7 +386,9 @@ const Trips = () => {
         <div className="empty-state">
           <div className="empty-icon">🗺️</div>
           <p className="empty-title">No trips found</p>
-          <button className="btn btn-primary mt-16" onClick={() => { setEditTrip(null); setShowModal(true); }}>➕ Create Trip</button>
+          {canManage && (
+            <button className="btn btn-primary mt-16" onClick={() => { setEditTrip(null); setShowModal(true); }}>➕ Create Trip</button>
+          )}
         </div>
       ) : (
         <>
@@ -371,9 +401,9 @@ const Trips = () => {
                   <th>Vehicle</th>
                   <th>Driver</th>
                   <th>Cargo</th>
-                  <th>Distance</th>
+                  <th>Planned Distance</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  {canManage && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -396,35 +426,37 @@ const Trips = () => {
                     <td style={{ fontSize: 12 }}>{t.cargoWeight?.toLocaleString()} kg</td>
                     <td style={{ fontSize: 12 }}>{t.plannedDistance} km</td>
                     <td><span className={`badge ${statusClass[t.status] || 'badge-secondary'}`}>{t.status}</span></td>
-                    <td>
-                      <div className="action-btns" style={{ flexWrap: 'wrap' }}>
-                        {t.status === 'Draft' && (
-                          <>
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleDispatch(t._id)}
-                              disabled={actionLoading === t._id + '_dispatch'}
-                              title="Dispatch"
-                            >
-                              {actionLoading === t._id + '_dispatch' ? '...' : '🚀'}
-                            </button>
-                            <button className="btn btn-secondary btn-sm" onClick={() => { setEditTrip(t); setShowModal(true); }} title="Edit">✏️</button>
-                          </>
-                        )}
-                        {t.status === 'Dispatched' && (
-                          <>
-                            <button className="btn btn-success btn-sm" onClick={() => setCompleteId(t._id)} title="Complete">✅</button>
-                            <button className="btn btn-danger btn-sm" onClick={() => setCancelId(t._id)} title="Cancel">❌</button>
-                          </>
-                        )}
-                        {t.status === 'Draft' && (
-                          <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(t._id)} title="Delete">🗑️</button>
-                        )}
-                        {(t.status === 'Completed' || t.status === 'Cancelled') && (
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>—</span>
-                        )}
-                      </div>
-                    </td>
+                    {canManage && (
+                      <td>
+                        <div className="action-btns" style={{ flexWrap: 'wrap' }}>
+                          {t.status === 'Draft' && (
+                            <>
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleDispatch(t._id)}
+                                disabled={actionLoading === t._id + '_dispatch'}
+                                title="Dispatch"
+                              >
+                                {actionLoading === t._id + '_dispatch' ? '...' : '🚀'}
+                              </button>
+                              <button className="btn btn-secondary btn-sm" onClick={() => { setEditTrip(t); setShowModal(true); }} title="Edit">✏️</button>
+                            </>
+                          )}
+                          {t.status === 'Dispatched' && (
+                            <>
+                              <button className="btn btn-success btn-sm" onClick={() => setCompleteId(t._id)} title="Complete">✅</button>
+                              <button className="btn btn-danger btn-sm" onClick={() => setCancelId(t._id)} title="Cancel">❌</button>
+                            </>
+                          )}
+                          {t.status === 'Draft' && (
+                            <button className="btn btn-danger btn-sm" onClick={() => setDeleteId(t._id)} title="Delete">🗑️</button>
+                          )}
+                          {(t.status === 'Completed' || t.status === 'Cancelled') && (
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>—</span>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

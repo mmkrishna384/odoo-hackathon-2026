@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { getExpenses, getExpense, createExpense, updateExpense, deleteExpense } = require('../controllers/expenseController');
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
-router.route('/').get(protect, getExpenses).post(protect, createExpense);
-router.route('/:id').get(protect, getExpense).put(protect, updateExpense).delete(protect, deleteExpense);
+router.route('/')
+  .get(protect, authorize('financial_analyst'), getExpenses)
+  .post(protect, authorize('financial_analyst'), createExpense);
+router.route('/:id')
+  .get(protect, authorize('financial_analyst'), getExpense)
+  .put(protect, authorize('financial_analyst'), updateExpense)
+  .delete(protect, authorize('financial_analyst'), deleteExpense);
 
 module.exports = router;

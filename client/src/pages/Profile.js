@@ -17,10 +17,10 @@ const ROLE_COLORS = {
 };
 
 const ROLE_PERMISSIONS = {
-  fleet_manager: ['View Dashboard', 'Manage Vehicles', 'Manage Drivers', 'Manage Trips', 'Manage Maintenance', 'View Fuel Logs', 'View Expenses', 'View Reports', 'Manage Users'],
-  driver: ['View Dashboard', 'View Trips', 'View Vehicles'],
-  safety_officer: ['View Dashboard', 'View Vehicles', 'View Drivers', 'View Trips', 'Manage Maintenance', 'View Reports'],
-  financial_analyst: ['View Dashboard', 'View Expenses', 'View Fuel Logs', 'View Reports'],
+  fleet_manager: ['View Dashboard', 'Oversee Fleet Assets & Lifecycle', 'Manage Maintenance Logs', 'Create & Manage Trips', 'View Operational Efficiency Reports'],
+  driver: ['View Available Trips', 'View Available Vehicles', 'View Available Drivers'],
+  safety_officer: ['View Dashboard', 'Ensure Driver Compliance & Licenses', 'Monitor Safety Scores'],
+  financial_analyst: ['View Dashboard', 'Review Operational Expenses & Profitability', 'Review Fuel Consumption', 'Review Maintenance Costs'],
 };
 
 const Profile = () => {

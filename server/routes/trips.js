@@ -4,12 +4,17 @@ const {
   getTrips, getTrip, createTrip, updateTrip, deleteTrip,
   dispatchTrip, completeTrip, cancelTrip,
 } = require('../controllers/tripController');
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 
-router.route('/').get(protect, getTrips).post(protect, createTrip);
-router.route('/:id').get(protect, getTrip).put(protect, updateTrip).delete(protect, deleteTrip);
-router.patch('/:id/dispatch', protect, dispatchTrip);
-router.patch('/:id/complete', protect, completeTrip);
-router.patch('/:id/cancel', protect, cancelTrip);
+router.route('/')
+  .get(protect, authorize('fleet_manager', 'driver'), getTrips)
+  .post(protect, authorize('fleet_manager'), createTrip);
+router.route('/:id')
+  .get(protect, authorize('fleet_manager', 'driver'), getTrip)
+  .put(protect, authorize('fleet_manager'), updateTrip)
+  .delete(protect, authorize('fleet_manager'), deleteTrip);
+router.patch('/:id/dispatch', protect, authorize('fleet_manager'), dispatchTrip);
+router.patch('/:id/complete', protect, authorize('fleet_manager'), completeTrip);
+router.patch('/:id/cancel', protect, authorize('fleet_manager'), cancelTrip);
 
 module.exports = router;

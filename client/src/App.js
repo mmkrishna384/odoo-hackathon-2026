@@ -50,7 +50,7 @@ const AppRoutes = () => {
 
       {/* Protected routes */}
       <Route path="/dashboard" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['fleet_manager', 'safety_officer', 'financial_analyst']}>
           <AppLayout>
             <Dashboard />
           </AppLayout>
@@ -58,7 +58,7 @@ const AppRoutes = () => {
       } />
 
       <Route path="/vehicles" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['fleet_manager', 'driver']}>
           <AppLayout>
             <Vehicles />
           </AppLayout>
@@ -66,7 +66,7 @@ const AppRoutes = () => {
       } />
 
       <Route path="/drivers" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['safety_officer']}>
           <AppLayout>
             <Drivers />
           </AppLayout>
@@ -74,7 +74,7 @@ const AppRoutes = () => {
       } />
 
       <Route path="/trips" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['fleet_manager', 'driver']}>
           <AppLayout>
             <Trips />
           </AppLayout>
@@ -82,7 +82,7 @@ const AppRoutes = () => {
       } />
 
       <Route path="/maintenance" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['fleet_manager']}>
           <AppLayout>
             <Maintenance />
           </AppLayout>
@@ -90,7 +90,7 @@ const AppRoutes = () => {
       } />
 
       <Route path="/fuel" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['financial_analyst']}>
           <AppLayout>
             <FuelLogs />
           </AppLayout>
@@ -98,7 +98,7 @@ const AppRoutes = () => {
       } />
 
       <Route path="/expenses" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['financial_analyst']}>
           <AppLayout>
             <Expenses />
           </AppLayout>
@@ -106,7 +106,7 @@ const AppRoutes = () => {
       } />
 
       <Route path="/reports" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['fleet_manager', 'financial_analyst']}>
           <AppLayout>
             <Reports />
           </AppLayout>
@@ -122,8 +122,8 @@ const AppRoutes = () => {
       } />
 
       {/* Default redirect */}
-      <Route path="/" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />
-      <Route path="*" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />
+      <Route path="/" element={<Navigate to={user ? (user.role === 'driver' ? '/trips' : '/dashboard') : '/login'} replace />} />
+      <Route path="*" element={<Navigate to={user ? (user.role === 'driver' ? '/trips' : '/dashboard') : '/login'} replace />} />
     </Routes>
   );
 };
