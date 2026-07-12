@@ -17,3 +17,13 @@ services:
         value: 30d
       - key: NODE_ENV
         value: production
+
+  - type: static
+    name: transitops-frontend
+    plan: free
+    rootDir: client
+    buildCommand: npm install && npm run build
+    publishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://transitops-backend-n4am.onrender.com/api
